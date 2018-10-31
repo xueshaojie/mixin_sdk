@@ -7,7 +7,7 @@ Ruby版本的MixinApi
 Add this line to your application's Gemfile:
 
 ``` ruby
-gem 'mixin_sdk', github: 'xueshaojie/mixin_sdk', branch: 'master'
+gem 'mixin_sdk'
 ```
 
 And then execute:
