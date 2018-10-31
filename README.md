@@ -19,12 +19,12 @@ $ gem install mixin_sdk
 如果使用rails可以放到 config/initializers/mixin_sdk.rb
 
 ```ruby
-  MixinSdk.configuration do |config|
-    config.client_id = your_client_id
-    config.session_id = your_session_id
-    config.private_key = your_private_key
-    config.pin_token = your_pin_token
-  end
+MixinSdk.configuration do |config|
+  config.client_id = your_client_id
+  config.session_id = your_session_id
+  config.private_key = your_private_key
+  config.pin_token = your_pin_token
+end
 ```
 
 如果不是rails中
