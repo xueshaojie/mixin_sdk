@@ -44,7 +44,7 @@ def read_profile
   MixinSdk.mixin("get", "me")
 end
 
-def update_profile
+def get_assets
   MixinSdk.mixin("get", "assets")
 end
 ```
@@ -52,7 +52,7 @@ end
 ```ruby
 def update_profile
   options = {
-    full_name: "价格提醒助手"
+    full_name: "测试"
   }.to_json
   MixinSdk.mixin("post", "me", options)
 end
@@ -60,7 +60,7 @@ end
 def tran_to_user
   options = {
     asset_id: "965e5c6e-434c-3fa9-b780-c50f43cd955c",
-    opponent_id: "c4d975b4-36ee-4ff5-8e08-13a86d495904",
+    opponent_id: "c4d975b4-****-****-****-13a86d495904",
     amount: "1",
     pin: MixinSdk.encrypt_pin("123456"), # pin_code = "123456"
     trace_id: SecureRandom.uuid,
