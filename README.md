@@ -1,43 +1,80 @@
 # MixinSdk
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/mixin_sdk`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Ruby版本的MixinApi
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-```ruby
-gem 'mixin_sdk'
+``` ruby
+gem 'mixin_sdk', github: 'xueshaojie/mixin_sdk', branch: 'master'
 ```
 
 And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install mixin_sdk
+``` ruby
+$ gem install mixin_sdk
+```
 
 ## Usage
+如果使用rails可以放到 config/initializers/mixin_sdk.rb
 
-TODO: Write usage instructions here
+```ruby
+  MixinSdk.configuration do |config|
+    config.client_id = your_client_id
+    config.session_id = your_session_id
+    config.private_key = your_private_key
+    config.pin_token = your_pin_token
+  end
+```
 
-## Development
+如果不是rails中
+```ruby
+  require 'mixin_sdk'
 
-After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+  MixinSdk.configuration do |config|
+    config.client_id = your_client_id
+    config.session_id = your_session_id
+    config.private_key = your_private_key
+    config.pin_token = your_pin_token
+  end
+```
+使用示例 get方法的示例
+```ruby
+  def read_profile
+    MixinSdk.mixin("get", "me")
+  end
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+  def update_profile
+    MixinSdk.mixin("get", "assets")
+  end
+```
+使用示例 post方法的示例
+```ruby
+  def update_profile
+    options = {
+      full_name: "价格提醒助手"
+    }.to_json
+    MixinSdk.mixin("post", "me", options)
+  end
 
-## Contributing
+  def tran_to_user
+    options = {
+      asset_id: "965e5c6e-434c-3fa9-b780-c50f43cd955c",
+      opponent_id: "c4d975b4-36ee-4ff5-8e08-13a86d495904",
+      amount: "1",
+      pin: MixinSdk.encrypt_pin("123456"), # pin_code = "123456"
+      trace_id: SecureRandom.uuid,
+      memo: "transfer"
+    }.to_json
+    MixinSdk.mixin("post", "transfers", options)
+  end
+```
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/mixin_sdk. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
-
+  需要结合Mixin的开发文档来使用。例如，查看接口名称、请求类型、参数。
+## References
+  [Mixin开发文档](https://developers.mixin.one/api)
+  [mixin_bot(ruby)](https://github.com/an-lee/mixin_bot)
+  [mixin-node (nodejs)](https://github.com/virushuo/mixin-node)
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
-
-## Code of Conduct
-
-Everyone interacting in the MixinSdk project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/mixin_sdk/blob/master/CODE_OF_CONDUCT.md).
+  [MIT License](https://opensource.org/licenses/MIT).

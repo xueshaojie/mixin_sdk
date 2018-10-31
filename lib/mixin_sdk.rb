@@ -2,19 +2,22 @@ require "mixin_sdk/version"
 require 'securerandom'
 require 'digest'
 require 'jwt'
+require 'jose'
 require 'json'
 require 'httparty'
 require 'openssl'
+require 'base64'
 
 module MixinSdk
 
   class Configuration
-    attr_accessor :client_id, :session_id, :private_key
+    attr_accessor :client_id, :session_id, :private_key, :pin_token
 
     def initialize
       @client_id = ''
       @session_id = ''
       @private_key = ''
+      @pin_token = ''
     end
   end
 
@@ -31,9 +34,6 @@ module MixinSdk
     end
 
     def jwt_token(method_name, uri, body)
-      # client_id = "5aa450de-f6cb-48db-****-************"
-      # session_id = "5a0b6221-6f2d-4bc6-****-************"
-      # rsa_private = OpenSSL::PKey::RSA.new File.read 'lib/rsa.key'
       now_time = Time.now.to_i
       sign = method_name == "POST" ? "POST/#{uri}#{body}" : "GET/#{uri}"
       payload = {
@@ -64,19 +64,52 @@ module MixinSdk
       response["error"] ? response["error"]["description"] : response["data"]
     end
 
-    # get方法的示例
-    def read_profile
-      mixin("get", "me")
+    def encrypt_pin(pin_code)
+      pin_token = Base64.decode64(configuration.pin_token)
+      private_key = OpenSSL::PKey::RSA.new(configuration.private_key)
+      aes_key = JOSE::JWA::PKCS1::rsaes_oaep_decrypt('SHA256', pin_token, private_key, configuration.session_id)
+      now_time = Time.now.to_i
+      zero_time = now_time % 0x100
+      one_time = (now_time % 0x10000) >> 8
+      two_time = (now_time % 0x1000000) >> 16
+      three_time = (now_time % 0x100000000) >> 24
+      time_string = zero_time.chr + one_time.chr + two_time.chr + three_time.chr + "\0\0\0\0"
+      encrypt_content = pin_code + time_string + time_string
+      pad_count = 16 - encrypt_content.length % 16
+
+      if pad_count > 0
+        padded_content = encrypt_content + pad_count.chr * pad_count
+      else
+        padded_content = encrypt_content
+      end
+
+      alg = "AES-256-CBC"
+      aes = OpenSSL::Cipher.new(alg)
+      iv = OpenSSL::Cipher.new(alg).random_iv
+      aes.encrypt
+      aes.key = aes_key
+      aes.iv = iv
+      cipher = aes.update(padded_content)
+      msg = iv + cipher
+      return Base64.strict_encode64 msg
     end
 
-    # post方法的示例
-    def update_profile
-      options = {
-        full_name: "价格提醒助手"
-      }.to_json
-      mixin("post", "me", options)
+    def decrypt_pin(msg)
+      msg = Base64.strict_decode64 msg
+      pin_token = Base64.decode64(configuration.pin_token)
+      private_key = OpenSSL::PKey::RSA.new(configuration.private_key)
+      iv = msg[0..15]
+      cipher = msg[16..47]
+      aes_key = JOSE::JWA::PKCS1::rsaes_oaep_decrypt('SHA256', pin_token, private_key, configuration.session_id)
+      alg = "AES-256-CBC"
+      decode_cipher = OpenSSL::Cipher.new(alg)
+      decode_cipher.decrypt
+      decode_cipher.iv = iv
+      decode_cipher.key = aes_key
+      plain = decode_cipher.update(cipher)
+      return plain
     end
-
+    
   end
 
 end
